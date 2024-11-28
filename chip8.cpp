@@ -61,7 +61,7 @@ void chip8::emulateCycle() {
   /*printf("pc: %d, opcode: 0x%x\n", pc, opcode);*/
   switch (opcode & 0xF000) {
 
-  case 0x0000: // 1xxx calls jump to xxx.
+  case 0x0000:
     switch (opcode & 0x000F) {
     case 0x0000: // 00E0 clears the screen.
       for (int i = 0; i < 2048; ++i)
@@ -73,6 +73,7 @@ void chip8::emulateCycle() {
     case 0x000E: // 00EE returns from subroutine.
       --sp;
       pc = stack[sp];
+      pc += 2;
       break;
 
     default:
@@ -134,15 +135,49 @@ void chip8::emulateCycle() {
       pc += 2;
       break;
 
-    case 0x0002: // 8xy1 - set Vx = Vx & Vy.
+    case 0x0002: // 8xy2 - set Vx = Vx & Vy.
       V[(opcode & 0x0F00) >> 8] =
           V[(opcode & 0x0F00) >> 8] & V[(opcode & 0x00F0) >> 4];
       pc += 2;
       break;
 
-    case 0x0003: // 8xy1 - set Vx = Vx ^ Vy.
+    case 0x0003: // 8xy3 - set Vx = Vx ^ Vy.
       V[(opcode & 0x0F00) >> 8] =
           V[(opcode & 0x0F00) >> 8] ^ V[(opcode & 0x00F0) >> 4];
+      pc += 2;
+      break;
+
+    case 0x0004: // 8xy4 - set Vx = Vx + Vy. Carry flag used.
+      V[15] = ((V[(opcode & 0x0F00) >> 8] + V[(opcode & 0x00F0) >> 4]) > 255)
+                  ? 1
+                  : 0;
+      V[(opcode & 0x0F00) >> 8] =
+          (V[(opcode & 0x0F00) >> 8] + V[(opcode & 0x00F0) >> 4]) % 256;
+      pc += 2;
+      break;
+
+    case 0x0005: // 8xy5 - set Vx = Vx - Vy. Carry flag used.
+      V[15] = ((V[(opcode & 0x0F00) >> 8] > V[(opcode & 0x00F0) >> 4])) ? 1 : 0;
+      V[(opcode & 0x0F00) >> 8] -= V[(opcode & 0x00F0) >> 4];
+      pc += 2;
+      break;
+
+    case 0x0006: // 8xy6 - SHR Vx. Carry flag used.
+      V[15] = V[(opcode & 0x0F00) >> 8] & 0x1;
+      V[(opcode & 0x0F00) >> 8] >>= 1;
+      pc += 2;
+      break;
+
+    case 0x0007: // 8xy7 - set Vx = Vy - Vx. Carry flag used.
+      V[15] = ((V[(opcode & 0x0F00) >> 8] < V[(opcode & 0x00F0) >> 4])) ? 1 : 0;
+      V[(opcode & 0x0F00) >> 8] =
+          V[(opcode & 0x00F0) >> 4] - V[(opcode & 0x0F00) >> 8];
+      pc += 2;
+      break;
+
+    case 0x000E: // 8xyE - SHL Vx. Carry flag used.
+      V[15] = V[(opcode & 0x0F00) >> 8] >> 7;
+      V[(opcode & 0x0F00) >> 8] <<= 1;
       pc += 2;
       break;
 
@@ -197,6 +232,29 @@ void chip8::emulateCycle() {
     pc += 2;
   } break;
 
+  case 0xE000:
+    switch (opcode & 0x00FF) {
+    case 0x009E: // Ex9E - Skip next instruction if key[V[x]] is true.
+      if (key[V[(opcode & 0x0F00) >> 8]])
+        pc += 4;
+      else
+        pc += 2;
+      break;
+
+    case 0x00A1: // ExA1 - Skip next instruction if key[V[x]] is false.
+      if (!key[V[(opcode & 0x0F00) >> 8]])
+        pc += 4;
+      else
+        pc += 2;
+      break;
+
+    default:
+      printf("Opcode at pc: %d not handled yet: 0x%X\n", pc, opcode);
+      exit(1);
+      break;
+    }
+    break;
+
   case 0xF000:
     switch (opcode & 0x00FF) {
     case 0x0007: // Fx07 will place delay timer value in Vx.
@@ -206,6 +264,34 @@ void chip8::emulateCycle() {
 
     case 0x001E: // Fx1E will add Vx to I.
       I += V[(opcode & 0x0F00) >> 8];
+      pc += 2;
+      break;
+
+    case 0x0029: // Fx29 set I to location of sprite V[x].
+      I = 5 * V[(opcode & 0x0F00) >> 8];
+      pc += 2;
+      break;
+
+    case 0x0033: // Fx33 will store BCD representation of V[x] at I.
+    {
+      unsigned char num = V[(opcode & 0x0F00) >> 8];
+      memory[I] = (num / 100) % 10;
+      memory[I + 1] = (num / 10) % 10;
+      memory[I + 2] = num % 10;
+      pc += 2;
+    } break;
+
+    case 0x0055: // Fx55 will store registers at I.
+      for (int i = 0; i <= (opcode & 0x0F00) >> 8; ++i)
+        memory[i + I] = V[i];
+      I += ((opcode & 0x0F00) >> 8) + 1;
+      pc += 2;
+      break;
+
+    case 0x0065: // Fx65 will read registers from I.
+      for (int i = 0; i <= (opcode & 0x0F00) >> 8; ++i)
+        V[i] = memory[i + I];
+      I += ((opcode & 0x0F00) >> 8) + 1;
       pc += 2;
       break;
 
