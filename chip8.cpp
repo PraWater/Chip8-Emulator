@@ -2,7 +2,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
 using namespace std;
 
 unsigned char fontset[80] = {
@@ -25,7 +24,6 @@ unsigned char fontset[80] = {
 };
 
 chip8::chip8() {
-  cout << "Hi" << endl;
   pc = 0x200;
   opcode = 0;
   I = 0;
@@ -54,7 +52,7 @@ chip8::chip8() {
   srand(time(NULL));
 }
 
-chip8::~chip8() { cout << "Bye" << endl; }
+chip8::~chip8() {}
 
 void chip8::emulateCycle() {
   opcode = memory[pc] << 8 | memory[pc + 1];
@@ -259,6 +257,21 @@ void chip8::emulateCycle() {
     switch (opcode & 0x00FF) {
     case 0x0007: // Fx07 will place delay timer value in Vx.
       V[(opcode & 0x0F00) >> 8] = delay_timer;
+      pc += 2;
+      break;
+
+    case 0x000A: // Fx0A will pause until key x is pressed.
+      if (key[(opcode & 0x0F00) >> 8])
+        pc += 2;
+      break;
+
+    case 0x0015: // Fx15 will place Vx value in delay timer.
+      delay_timer = V[(opcode & 0x0F00) >> 8];
+      pc += 2;
+      break;
+
+    case 0x0018: // Fx18 will place Vx value in sound timer.
+      sound_timer = V[(opcode & 0x0F00) >> 8];
       pc += 2;
       break;
 
