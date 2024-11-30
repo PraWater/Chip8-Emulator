@@ -261,9 +261,21 @@ void chip8::emulateCycle() {
       break;
 
     case 0x000A: // Fx0A will pause until key x is pressed.
-      if (key[(opcode & 0x0F00) >> 8])
-        pc += 2;
-      break;
+    {
+      bool keyPress = false;
+
+      for (int i = 0; i < 16; ++i) {
+        if (key[i] != 0) {
+          V[(opcode & 0x0F00) >> 8] = i;
+          keyPress = true;
+        }
+      }
+
+      if (!keyPress)
+        return;
+
+      pc += 2;
+    } break;
 
     case 0x0015: // Fx15 will place Vx value in delay timer.
       delay_timer = V[(opcode & 0x0F00) >> 8];
@@ -319,6 +331,15 @@ void chip8::emulateCycle() {
     printf("Opcode at pc: %d not handled yet: 0x%X\n", pc, opcode);
     exit(1);
     break;
+  }
+
+  if (delay_timer > 0)
+    --delay_timer;
+
+  if (sound_timer > 0) {
+    if (sound_timer == 1)
+      printf("BEEP!\n");
+    --sound_timer;
   }
 }
 
