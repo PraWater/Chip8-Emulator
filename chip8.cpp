@@ -29,25 +29,22 @@ chip8::chip8() {
   I = 0;
   sp = 0;
 
-  // Clearing pixels, stack, registers and memory. Is this really required?
-  for (int i = 0; i < 64 * 32; ++i) {
+  // Clearing pixels, stack, registers, memory and keys.
+  for (int i = 0; i < 64 * 32; ++i)
     gfx[i] = false;
-  }
-  for (int i = 0; i < 16; ++i) {
+  for (int i = 0; i < 16; ++i)
     stack[i] = 0;
-  }
-  for (int i = 0; i < 16; ++i) {
+  for (int i = 0; i < 16; ++i)
     V[i] = 0;
-  }
-  for (int i = 0; i < 4096; ++i) {
+  for (int i = 0; i < 4096; ++i)
     memory[i] = 0x00;
-  }
+  for (int i = 0; i < 16; ++i)
+    key[i] = false;
 
   // Loading fontset.
   for (int i = 0; i < 80; ++i) {
     memory[i] = fontset[i];
   }
-  drawFlag = true;
 
   srand(time(NULL));
 }

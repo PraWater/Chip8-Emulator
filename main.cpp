@@ -4,8 +4,9 @@
 #include <cstdlib>
 
 const int PIXEL_SIZE = 15;
-const int SCREEN_WIDTH = 64*PIXEL_SIZE;
-const int SCREEN_HEIGHT = 32*PIXEL_SIZE;
+const int PADDING = 15;
+const int SCREEN_WIDTH = 64 * PIXEL_SIZE + 2 * PADDING;
+const int SCREEN_HEIGHT = 32 * PIXEL_SIZE + 2 * PADDING;
 
 void drawPixels(chip8 *ch, SDL_Renderer *renderer) {
   SDL_SetRenderDrawColor(renderer, 30, 30, 46, 255);
@@ -15,8 +16,8 @@ void drawPixels(chip8 *ch, SDL_Renderer *renderer) {
   for (int i = 0; i < 32; ++i) {
     for (int j = 0; j < 64; ++j) {
       if (ch->gfx[i * 64 + j]) {
-        SDL_Rect rect = {j * PIXEL_SIZE, i * PIXEL_SIZE, PIXEL_SIZE,
-                         PIXEL_SIZE};
+        SDL_Rect rect = {j * PIXEL_SIZE + PADDING, i * PIXEL_SIZE + PADDING,
+                         PIXEL_SIZE, PIXEL_SIZE};
         SDL_RenderFillRect(renderer, &rect);
       }
     }
@@ -31,7 +32,8 @@ int main(int argc, char *argv[]) {
     printf("ROM not specified.\n");
     return 1;
   }
-  ch.loadApplication(argv[1]);
+  if (!ch.loadApplication(argv[1]))
+    return 1;
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
