@@ -15,7 +15,7 @@ void drawPixels(chip8 *ch, SDL_Renderer *renderer) {
   SDL_SetRenderDrawColor(renderer, 166, 227, 161, 255);
   for (int i = 0; i < 32; ++i) {
     for (int j = 0; j < 64; ++j) {
-      if (ch->gfx[i * 64 + j]) {
+      if (ch->gfx[i * 64 + j] || ch->gfx_buffer[i * 64 + j]) {
         SDL_Rect rect = {j * PIXEL_SIZE + PADDING, i * PIXEL_SIZE + PADDING,
                          PIXEL_SIZE, PIXEL_SIZE};
         SDL_RenderFillRect(renderer, &rect);
@@ -177,6 +177,7 @@ int main(int argc, char *argv[]) {
 
     if (ch.drawFlag) {
       drawPixels(&ch, renderer);
+      ch.bufferPixels();
       ch.drawFlag = false;
     }
 

@@ -8,10 +8,12 @@ public:
   bool drawFlag;
 
   void emulateCycle();
+  void bufferPixels();
   /*void debugRender();*/
   bool loadApplication(const char *filename);
 
   bool gfx[64 * 32]; // Total amount of pixels: 2048
+  bool gfx_buffer[64 * 32];
   bool key[16];
 
 private:

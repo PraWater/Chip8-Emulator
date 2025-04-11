@@ -30,8 +30,10 @@ chip8::chip8() {
   sp = 0;
 
   // Clearing pixels, stack, registers, memory and keys.
-  for (int i = 0; i < 64 * 32; ++i)
+  for (int i = 0; i < 64 * 32; ++i) {
     gfx[i] = false;
+    gfx_buffer[i] = false;
+  }
   for (int i = 0; i < 16; ++i)
     stack[i] = 0;
   for (int i = 0; i < 16; ++i)
@@ -376,4 +378,9 @@ bool chip8::loadApplication(const char *filename) {
   free(buffer);
 
   return true;
+}
+
+void chip8::bufferPixels() {
+  for (int i = 0; i < 64 * 32; ++i)
+    gfx_buffer[i] = gfx[i];
 }
